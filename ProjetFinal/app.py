@@ -14,8 +14,8 @@ def clean_text(text):
 
 def main():
     # Configuration
-    MODEL_DIR = "bert_streamlit_ready"
     
+    MODEL_DIR = "ProjetFinal/bert_streamlit_ready"  # Chemin relatif
     # Chargement du modèle
     @st.cache_resource
     def load_model():
