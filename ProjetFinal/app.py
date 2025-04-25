@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 from transformers import BertForSequenceClassification, BertTokenizer
 from safetensors.torch import load_file
@@ -7,46 +5,41 @@ import torch
 import re
 import sys
 
-# Define clean_text function outside of load_model and main for pickling
 def clean_text(text):
     text = re.sub(r'@\w+|#|http\S+|[^\w\s]', '', text.lower())
     return text.strip()
 
 def main():
-    # Configuration
+    MODEL_DIR = "ProjetFinal/bert_streamlit_ready"
     
-    MODEL_DIR = "ProjetFinal/bert_streamlit_ready"  # Chemin relatif
-    # Chargement du modèle
     @st.cache_resource
     def load_model():
         try:
-            # 1. Load the model structure from the directory
+            # 1. Chargement du modèle
             model = BertForSequenceClassification.from_pretrained(MODEL_DIR, num_labels=2)
             
-            # 2. Load the state dict
+            # 2. Chargement des poids
             model.load_state_dict(load_file(f"{MODEL_DIR}/model.safetensors"))
             
+            # 3. Chargement du tokenizer
             tokenizer = BertTokenizer.from_pretrained(MODEL_DIR)
-            # Use safe_globals to allow clean_text when loading metadata
-
-            try:
-    from transformers import BertForSequenceClassification, BertTokenizer
-except Exception as e:
-    st.error(f"Erreur de chargement de transformers: {str(e)}")
+            
+            # 4. Chargement des métadonnées
             with torch.serialization.safe_globals([clean_text]):
-                metadata = torch.load(f"{MODEL_DIR}/metadata.pth", map_location='cpu')  
+                metadata = torch.load(f"{MODEL_DIR}/metadata.pth", map_location='cpu')
+                
             return model, tokenizer, metadata
+            
         except Exception as e:
             st.error(f"Erreur de chargement du modèle : {str(e)}")
-            return None, None, None  # Return None values on error
+            return None, None, None
 
-    # Interface
+    # Interface Streamlit
     st.set_page_config(page_title="Prédiction de Tweets Viraux", layout="wide")
     st.title("🔮 Prédiction de Tweets Viraux")
     
     model, tokenizer, metadata = load_model()
 
-    # Check if model loaded successfully before proceeding
     if model is not None and tokenizer is not None and metadata is not None:
         with st.form("prediction_form"):
             user_input = st.text_area("Entrez un tweet :")
@@ -79,12 +72,8 @@ except Exception as e:
     else:
         st.error("Le modèle n'a pas pu être chargé. Veuillez vérifier les logs d'erreur.")
 
-
-
 if __name__ == "__main__":
     if "streamlit" in sys.modules:
         main()
     else:
         print("⚠️ Veuillez exécuter avec : streamlit run app.py")
-        print("   Ou via Jupyter : !streamlit run app.py")
-
