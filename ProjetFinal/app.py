@@ -28,6 +28,11 @@ def main():
             
             tokenizer = BertTokenizer.from_pretrained(MODEL_DIR)
             # Use safe_globals to allow clean_text when loading metadata
+
+            try:
+    from transformers import BertForSequenceClassification, BertTokenizer
+except Exception as e:
+    st.error(f"Erreur de chargement de transformers: {str(e)}")
             with torch.serialization.safe_globals([clean_text]):
                 metadata = torch.load(f"{MODEL_DIR}/metadata.pth", map_location='cpu')  
             return model, tokenizer, metadata
